@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contas da Casa</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#eaf0f2;--card:#fff;--ink:#14262e;--mute:#5d727b;--line:#d3dde1;--acc:#0e6b66;--acc-ink:#fff;--rec:#c98a0b;--neg:#b3402e;--pos:#0e6b66;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1b20;--card:#172830;--ink:#e6eff2;--mute:#8aa1aa;--line:#28404a;--acc:#3fb8ae;--acc-ink:#07201e;--rec:#e3a93a;--neg:#ef8a77;--pos:#3fb8ae}}
+:root[data-theme="dark"]{--bg:#0f1b20;--card:#172830;--ink:#e6eff2;--mute:#8aa1aa;--line:#28404a;--acc:#3fb8ae;--acc-ink:#07201e;--rec:#e3a93a;--neg:#ef8a77;--pos:#3fb8ae}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.5rem;font-weight:800;margin:0 0 6px}
+h2{font-size:1.05rem;font-weight:600;margin:0 0 10px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.nav b{font-size:1.25rem;font-weight:800;text-transform:capitalize}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px}
+button.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+button.ico{padding:6px 10px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+label{display:block;font-size:.85rem;color:var(--mute);margin-bottom:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:.9rem;background:var(--bg);color:var(--ink)}
+button.chip{padding:4px 10px}
+button.chip[aria-pressed="true"]{border-color:var(--pos);color:var(--pos);font-weight:600}
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.srow label{flex:1;display:flex;align-items:center;gap:8px;margin:0;font-size:.95rem;color:var(--ink)}
+.srow label input{width:auto}
+.srow>input{width:110px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+small,.hint{color:var(--mute);font-size:.85rem}
+.tag{font-size:.75rem;border-radius:6px;padding:1px 7px;margin-left:6px;border:1px solid var(--rec);color:var(--rec)}
+.tag.u{border-color:var(--mute);color:var(--mute)}
+.tag.ok{border-color:var(--pos);color:var(--pos)}
+.amt{font-weight:600;white-space:nowrap}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem;padding-top:10px;border-top:2px solid var(--ink);margin-top:6px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.empty{color:var(--mute);margin:4px 0}
+.acts{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+.banner{background:var(--card);border:1px solid var(--rec);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:.9rem}
+#login{max-width:380px;margin:12vh auto 0}#login .grid{grid-template-columns:1fr}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.row{flex-direction:column}.acts{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<main id="login" hidden>
+  <section>
+    <h1>Contas da casa</h1>
+    <p class="hint" style="margin:0 0 12px">Entre com o e-mail e a senha cadastrados para a casa.</p>
+    <div class="grid">
+      <div><label for="lmail">E-mail</label><input id="lmail" type="email" autocomplete="username"></div>
+      <div><label for="lpass">Senha</label><input id="lpass" type="password" autocomplete="current-password"></div>
+      <div><button class="pri" id="lbtn" type="button" style="width:100%">Entrar</button></div>
+    </div>
+    <p class="empty" id="lerr" role="alert"></p>
+  </section>
+</main>
+<main id="app" hidden>
+<div class="top"><div><h1>Contas da casa</h1>
+<p class="hint" style="margin:0 0 14px">Cadastro compartilhado: todos os moradores com acesso veem as mesmas contas em tempo real.</p></div>
+<button id="lout" type="button">Sair</button></div>
+<div id="banner"></div>
+
+<section>
+  <h2>Moradores</h2>
+  <div class="chips" id="members"></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <input id="mname" placeholder="Nome do morador" maxlength="30" aria-label="Nome do morador">
+    <button class="pri" id="addm" type="button">Adicionar</button>
+  </div>
+</section>
+
+<div class="nav">
+  <button class="ico" id="prev" aria-label="Mês anterior">‹</button>
+  <b id="mlabel"></b>
+  <button class="ico" id="next" aria-label="Próximo mês">›</button>
+</div>
+
+<section>
+  <h2>Contas do mês</h2>
+  <div id="bills"></div>
+  <div class="total"><span>Total</span><span id="total">R$ 0,00</span></div>
+</section>
+
+<section>
+  <h2>Quem paga quem</h2>
+  <p class="hint" style="margin:0 0 8px">Considera só as partes ainda não marcadas como pagas.</p>
+  <div id="settle"></div>
+</section>
+
+<section>
+  <h2 id="ftitle">Nova conta</h2>
+  <div class="grid">
+    <div class="full"><label for="bname">Descrição</label><input id="bname" placeholder="Ex.: Aluguel, Luz, Internet" maxlength="40"></div>
+    <div><label for="bamt">Valor total (R$)</label><input id="bamt" inputmode="decimal" placeholder="0,00"></div>
+    <div><label for="btype">Tipo</label>
+      <select id="btype"><option value="rec">Recorrente (todo mês)</option><option value="uni">Única (só neste mês)</option></select></div>
+    <div><label for="bpay">Quem pagou ao fornecedor</label><select id="bpay"></select></div>
+    <div><label for="bstart">Mês de início</label><input id="bstart" type="month"></div>
+    <div class="full"><label for="bmode">Como dividir</label>
+      <select id="bmode"><option value="eq">Em partes iguais</option><option value="pct">Por porcentagem</option><option value="val">Por valor em R$</option></select></div>
+    <div class="full"><label>Dividir entre</label><div id="bsplit"></div><div class="hint" id="shint"></div></div>
+    <div class="full" style="display:flex;gap:8px">
+      <button class="pri" id="save" type="button">Salvar conta</button>
+      <button id="cancel" type="button" hidden>Cancelar edição</button>
+    </div>
+  </div>
+  <p class="empty" id="err" role="alert"></p>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const num=s=>parseFloat(String(s).replace(/\./g,'').replace(',','.'));
+function ym(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function shift(m,n){const[y,mo]=m.split('-').map(Number);return ym(new Date(y,mo-1+n,1))}
+let db=null,S={members:[],bills:[],paid:{}},cur=ym(new Date()),editing=null,F={sel:{}},ready=0,canWrite=null;
+const nameOf=id=>(S.members.find(m=>m.id===id)||{name:'(removido)'}).name;
+const active=(b,m)=>b.type==='uni'?b.start===m:(b.start<=m&&(!b.until||m<=b.until));
+
+function shares(b){
+  const ids=Object.keys(b.parts||{}).filter(id=>S.members.some(m=>m.id===id)),out={};
+  ids.forEach(id=>{const v=b.parts[id];out[id]=b.mode==='pct'?b.amount*v/100:b.mode==='val'?v:b.amount/ids.length});
+  return out;
+}
+async function w(fn){$('err').textContent='';try{await fn()}catch(e){$('err').textContent=(e&&e.code==='permission-denied')?'Sem permissão para salvar. Entre novamente ou peça acesso a quem criou o app.':'Não foi possível salvar agora. Tente de novo.'}}
+
+function render(){
+  if(!db)return;
+  $('mlabel').textContent=new Date(cur+'-01T12:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  $('members').innerHTML=S.members.length?S.members.map(m=>`<span class="chip">${esc(m.name)} <button class="ico" style="padding:0 6px;border:0;background:none" data-rm="${m.id}" aria-label="Remover ${esc(m.name)}">×</button></span>`).join(''):'<p class="empty">Adicione os moradores para começar.</p>';
+  const pv=$('bpay').value;$('bpay').innerHTML=S.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');if(pv)$('bpay').value=pv;
+  renderSplit();
+
+  const list=S.bills.filter(b=>active(b,cur));
+  const net={};S.members.forEach(m=>net[m.id]=0);
+  $('bills').innerHTML=list.length?list.map(b=>{
+    const sh=shares(b),key=b.id+'_'+cur,pd=(S.paid[key]||{}).shares||{};
+    const others=Object.keys(sh).filter(id=>id!==b.payer);
+    others.forEach(id=>{if(!pd[id]){if(id in net)net[id]-=sh[id];if(b.payer in net)net[b.payer]+=sh[id]}});
+    const done=others.length>0&&others.every(id=>pd[id]);
+    return `<div class="row"><div style="flex:1"><b>${esc(b.name)}</b><span class="tag ${b.type==='uni'?'u':''}">${b.type==='rec'?'recorrente':'única'}</span>${done?'<span class="tag ok">quitada</span>':''}
+      <small style="display:block">Pago por ${esc(nameOf(b.payer))}</small>
+      <div class="chips" style="margin-top:6px">${Object.keys(sh).map(id=>id===b.payer?`<span class="chip">${esc(nameOf(id))} ${brl(sh[id])} · pagou</span>`:`<button class="chip" data-tg="${b.id}|${id}" aria-pressed="${!!pd[id]}" title="Marcar parte como paga">${pd[id]?'✓ ':''}${esc(nameOf(id))} ${brl(sh[id])}</button>`).join('')}</div></div>
+      <div style="text-align:right"><div class="amt">${brl(b.amount)}</div><div class="acts">
+      <button class="ico" data-ed="${b.id}">Editar</button>${b.type==='rec'?`<button class="ico" data-end="${b.id}" title="Não cobrar a partir do próximo mês">Encerrar</button>`:''}<button class="ico" data-del="${b.id}">Excluir</button></div></div></div>`}).join(''):'<p class="empty">Nenhuma conta neste mês. Cadastre uma abaixo.</p>';
+  $('total').textContent=brl(list.reduce((s,b)=>s+b.amount,0));
+
+  const cr=[],dbt=[];
+  Object.entries(net).forEach(([id,v])=>{v=Math.round(v*100)/100;if(v>0.009)cr.push([id,v]);else if(v<-0.009)dbt.push([id,-v])});
+  cr.sort((a,b)=>b[1]-a[1]);dbt.sort((a,b)=>b[1]-a[1]);
+  const pays=[];let i=0,j=0;
+  while(i<dbt.length&&j<cr.length){const x=Math.min(dbt[i][1],cr[j][1]);pays.push([dbt[i][0],cr[j][0],x]);dbt[i][1]-=x;cr[j][1]-=x;if(dbt[i][1]<0.01)i++;if(cr[j][1]<0.01)j++}
+  $('settle').innerHTML=S.members.map(m=>{const v=Math.round(net[m.id]*100)/100;return`<div class="row" style="padding:8px 0"><span>${esc(m.name)}</span><span class="amt ${v>0?'pos':v<0?'neg':''}">${v>0?'recebe ':v<0?'deve ':''}${brl(Math.abs(v))}</span></div>`}).join('')
+   +(pays.length?'<div style="margin-top:8px">'+pays.map(p=>`<div class="row" style="padding:8px 0"><span><b>${esc(nameOf(p[0]))}</b> paga a <b>${esc(nameOf(p[1]))}</b></span><span class="amt">${brl(p[2])}</span></div>`).join('')+'</div>':'<p class="empty">Tudo certo: ninguém deve nada neste mês.</p>');
+}
+
+function renderSplit(){
+  const mode=$('bmode').value;
+  $('bsplit').innerHTML=S.members.map(m=>{const on=m.id in F.sel;return`<div class="srow"><label><input type="checkbox" data-sp="${m.id}" ${on?'checked':''}> ${esc(m.name)}</label>${mode!=='eq'&&on?`<input data-pv="${m.id}" inputmode="decimal" value="${F.sel[m.id]??''}" placeholder="${mode==='pct'?'%':'R$'}" aria-label="${mode==='pct'?'Porcentagem':'Valor'} de ${esc(m.name)}">`:''}</div>`}).join('')||'<p class="empty">Cadastre moradores primeiro.</p>';
+  hint();
+}
+function hint(){
+  const mode=$('bmode').value,ids=Object.keys(F.sel);
+  if(mode==='eq'){$('shint').textContent=ids.length?`${brl((num($('bamt').value)||0)/ids.length)} para cada um.`:'';return}
+  const sum=ids.reduce((s,id)=>s+(num(F.sel[id])||0),0),amt=num($('bamt').value)||0;
+  $('shint').textContent=mode==='pct'?`Soma: ${sum.toFixed(2).replace('.',',')}% (precisa fechar 100%).`:`Soma: ${brl(sum)} de ${brl(amt)}${Math.abs(sum-amt)<0.01?'':' · faltam '+brl(amt-sum)}.`;
+}
+$('bmode').onchange=()=>{if($('bmode').value==='eq')Object.keys(F.sel).forEach(k=>F.sel[k]='');renderSplit()};
+$('bamt').oninput=hint;
+$('bsplit').addEventListener('change',e=>{const id=e.target.dataset.sp;if(!id)return;if(e.target.checked)F.sel[id]='';else delete F.sel[id];renderSplit()});
+$('bsplit').addEventListener('input',e=>{const id=e.target.dataset.pv;if(id){F.sel[id]=e.target.value;hint()}});
+
+async function addMember(){const n=$('mname').value.trim();if(!n)return;await w(()=>db.collection('members').add({name:n}));$('mname').value=''}
+$('addm').onclick=addMember;
+$('mname').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addMember()}};
+$('prev').onclick=()=>{cur=shift(cur,-1);render()};
+$('next').onclick=()=>{cur=shift(cur,1);render()};
+
+function reset(){editing=null;F.sel={};S.members.forEach(m=>F.sel[m.id]='');$('bname').value='';$('bamt').value='';$('btype').value='rec';$('bmode').value='eq';$('bstart').value=cur;$('ftitle').textContent='Nova conta';$('cancel').hidden=true;$('err').textContent='';renderSplit()}
+$('cancel').onclick=reset;
+$('save').onclick=()=>w(async()=>{
+  const name=$('bname').value.trim(),amount=num($('bamt').value),mode=$('bmode').value,ids=Object.keys(F.sel),start=$('bstart').value||cur;
+  const bad=m=>{$('err').textContent=m;return true};
+  if(!S.members.length)return bad('Adicione ao menos um morador.');
+  if(!name)return bad('Informe a descrição da conta.');
+  if(!(amount>0))return bad('Informe um valor maior que zero.');
+  if(!ids.length)return bad('Escolha com quem dividir a conta.');
+  const parts={};
+  if(mode==='eq')ids.forEach(id=>parts[id]=1);
+  else{let sum=0;for(const id of ids){const v=num(F.sel[id]);if(!(v>=0))return bad('Preencha o valor de cada pessoa selecionada.');parts[id]=v;sum+=v}
+    if(mode==='pct'&&Math.abs(sum-100)>0.01)return bad('As porcentagens precisam somar 100%.');
+    if(mode==='val'&&Math.abs(sum-amount)>0.01)return bad('Os valores precisam somar o total da conta.')}
+  const b={name,amount,type:$('btype').value,payer:$('bpay').value,mode,parts,start};
+  if(editing){const o=S.bills.find(x=>x.id===editing);if(o&&o.until&&b.type==='rec')b.until=o.until;await db.doc('bills/'+editing).set(b)}
+  else await db.collection('bills').add(b);
+  cur=start;reset();render();
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t||!db)return;const d=t.dataset;
+  if(d.rm){const m=S.members.find(x=>x.id===d.rm);if(S.bills.some(b=>b.payer===m.id||(b.parts||{})[m.id]!==undefined)&&!confirm('Este morador tem contas vinculadas. Remover mesmo assim?'))return;w(()=>db.doc('members/'+m.id).delete())}
+  if(d.del&&confirm('Excluir esta conta de todos os meses?'))w(()=>db.doc('bills/'+d.del).delete());
+  if(d.end)w(()=>db.doc('bills/'+d.end).update({until:cur}));
+  if(d.tg){const[bid,mid]=d.tg.split('|'),key=bid+'_'+cur,sh={...((S.paid[key]||{}).shares||{})};if(sh[mid])delete sh[mid];else sh[mid]=true;w(()=>db.doc('paid/'+key).set({shares:sh}))}
+  if(d.ed){const b=S.bills.find(x=>x.id===d.ed);editing=b.id;$('bname').value=b.name;$('bamt').value=String(b.amount).replace('.',',');$('btype').value=b.type;$('bstart').value=b.start;$('bmode').value=b.mode||'eq';
+    $('bpay').value=b.payer;F.sel={};Object.keys(b.parts||{}).forEach(id=>F.sel[id]=b.mode==='eq'?'':String(b.parts[id]).replace('.',','));renderSplit();
+    $('ftitle').textContent='Editar conta';$('cancel').hidden=false;$('bname').focus()}
+});
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyASJdJUQiT4_6kq8eHVXYfiSz7mPJn81nQ",
+  authDomain: "divisaomkf.firebaseapp.com",
+  projectId: "divisaomkf",
+  storageBucket: "divisaomkf.firebasestorage.app",
+  messagingSenderId: "836669527195",
+  appId: "1:836669527195:web:c71a1944ff0d51b48fe23e",
+  measurementId: "G-B7DKLFNBNP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+let started=false;
+
+function startApp(){
+  if(started)return;started=true;
+  db=firebase.firestore();
+  $('bstart').value=cur;
+  const first=()=>{if(++ready===3)reset();render()};let seen={};
+  const sub=(name,fn)=>db.collection(name).onSnapshot(s=>{fn(s);if(!seen[name]){seen[name]=1;first()}else render()},()=>{$('banner').innerHTML='<div class="banner">Sem permissão para ler os dados. Verifique as regras do Firestore e se seu e-mail está autorizado.</div>'});
+  sub('members',s=>{S.members=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))});
+  sub('bills',s=>{S.bills=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))});
+  sub('paid',s=>{S.paid={};s.docs.forEach(d=>S.paid[d.id]=d.data())});
+}
+auth.onAuthStateChanged(u=>{
+  $('login').hidden=!!u;$('app').hidden=!u;
+  if(u)startApp();
+});
+async function doLogin(){
+  $('lerr').textContent='';
+  try{await auth.signInWithEmailAndPassword($('lmail').value.trim(),$('lpass').value)}
+  catch(e){$('lerr').textContent='E-mail ou senha incorretos.'}
+}
+$('lbtn').onclick=doLogin;
+$('lpass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+$('lout').onclick=async()=>{await auth.signOut();location.reload()};
+</script>
+</body>
+</html>
