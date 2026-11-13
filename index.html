@@ -107,7 +107,7 @@ small,.hint{color:var(--mute);font-size:.85rem}
     <div class="full"><label for="bname">Descrição</label><input id="bname" placeholder="Ex.: Aluguel, Luz, Internet" maxlength="40"></div>
     <div><label for="bamt">Valor total (R$)</label><input id="bamt" inputmode="decimal" placeholder="0,00"></div>
     <div><label for="btype">Tipo</label>
-      <select id="btype"><option value="rec">Recorrente (todo mês)</option><option value="uni">Única (só neste mês)</option></select></div>
+      <select id="btype"><option value="uni">Única (só neste mês)</option><option value="rec">Recorrente (todo mês)</option></select></div>
     <div><label for="bpay">Quem pagou ao fornecedor</label><select id="bpay"></select></div>
     <div><label for="bstart">Mês de início</label><input id="bstart" type="month"></div>
     <div class="full"><label for="bmode">Como dividir</label>
@@ -192,7 +192,7 @@ $('mname').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addMember()}};
 $('prev').onclick=()=>{cur=shift(cur,-1);render()};
 $('next').onclick=()=>{cur=shift(cur,1);render()};
 
-function reset(){editing=null;F.sel={};S.members.forEach(m=>F.sel[m.id]='');$('bname').value='';$('bamt').value='';$('btype').value='rec';$('bmode').value='eq';$('bstart').value=cur;$('ftitle').textContent='Nova conta';$('cancel').hidden=true;$('err').textContent='';renderSplit()}
+function reset(){editing=null;F.sel={};S.members.forEach(m=>F.sel[m.id]='');$('bname').value='';$('bamt').value='';$('btype').value='uni';$('bmode').value='eq';$('bstart').value=cur;$('ftitle').textContent='Nova conta';$('cancel').hidden=true;$('err').textContent='';renderSplit()}
 $('cancel').onclick=reset;
 $('save').onclick=()=>w(async()=>{
   const name=$('bname').value.trim(),amount=num($('bamt').value),mode=$('bmode').value,ids=Object.keys(F.sel),start=$('bstart').value||cur;
